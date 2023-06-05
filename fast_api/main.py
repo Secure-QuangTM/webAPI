@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel
+import requests
 
 class TaxIn(BaseModel):
     cost: int
@@ -9,12 +10,16 @@ class LogIn(BaseModel):
     login_id: str
     password: str
 
-# login_user = {
-#     "Allice": {
-#         "login_id": "admin1",
-#         "password": "Admin1234"
-#     }, 
-# }
+login_user = {
+    "Allice": {
+        "login_id": "admin1",
+        "password": "Admin1234"
+    }, 
+    "Quang": {
+        "login_id": "admin",
+        "password": "Admin1234"
+    }, 
+}
 
 app = FastAPI()
 
@@ -53,14 +58,31 @@ def login(data: LogIn):
         "message": "Login Fail"
     }
 
-    if data.login_id == "admin" and data.password == "Admin1234":
-        return res_data_success
-    else: 
-        return res_data_fail
+    for user in login_user.values():
+        if data.login_id == user["login_id"] and data.password == user["password"]:
+            return res_data_success
+            break
+        else: 
+            continue
 
-    # for user in login_user:
-    #     print(user)
-    #     # if data.login_id == user.login_id and data.password == user.password:
-    #     #     return res_data_success
-    #     # else: 
-    #     #     return res_data_fail
+@app.post("/search")
+# def search(bs_session_id: str = Header(...)):
+#     print()
+#     if not bs_session_id:
+#         print(1)
+#         raise HTTPException(status_code=401, detail='Header is missing')
+#     else:
+#         if bs_session_id == "18db5f67d2df4ad0a8a2bd9a851f61c7":
+#             print('Login Success')
+#         else: 
+#             raise HTTPException(status_code=401, detail='Authentication Fail')
+def search(request: Request):
+    if not request._headers.get('bs-session-id'):
+        raise HTTPException(status_code=401, detail='Authentication Require')
+    else:
+        if request._headers.get('bs-session-id') == "18db5f67d2df4ad0a8a2bd9a851f61c7":
+            print('Login Success')
+        else: 
+            raise HTTPException(status_code=401, detail='Authentication Fail')
+
+
